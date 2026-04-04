@@ -1,0 +1,29 @@
+{
+  "name": "fb_kr_3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "server": "http-server --ssl --cert localhost+2.pem --key localhost+2-key.pem -p 3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Desxlated-boop/FB_KR_3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Desxlated-boop/FB_KR_3/issues"
+  },
+  "homepage": "https://github.com/Desxlated-boop/FB_KR_3#readme",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "web-push": "^3.6.7"
+  }
+}
