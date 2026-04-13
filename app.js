@@ -84,30 +84,96 @@ loadContent('home');
 function initNotes() {
     const form = document.getElementById('note-form');
     const input = document.getElementById('note-input');
+    const reminderForm = document.getElementById('reminder-form');
+    const reminderText = document.getElementById('reminder-text');
+    const reminderTime = document.getElementById('reminder-time');
     const list = document.getElementById('notes-list');
 
     function loadNotes() {
         const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-        list.innerHTML = notes.map(note => `<li class="card" style="margin-bottom: 0.5rem; padding: 0.5rem;">${note}</li>`).join('');
+        if (notes.length === 0) {
+            list.innerHTML = '<li style="color:#999; text-align:center;">Нет заметок...</li>';
+            return;
+        }
+        list.innerHTML = notes.map(note => {
+            let reminderInfo = '';
+            if (note.reminder) {
+                const date = new Date(note.reminder);
+                reminderInfo = `<br><small style="color:#28a745;">🔔 Напоминание: ${date.toLocaleString()}</small>`;
+            }
+            return `<li class="card" style="margin-bottom: 0.5rem; padding: 0.5rem;">${escapeHtml(note.text)}${reminderInfo}</li>`;
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
 
     function addNote(text) {
         const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-        notes.push(text);
+        const newNote = {
+            id: Date.now(),
+            text: text,
+            reminder: null
+        };
+        notes.push(newNote);
         localStorage.setItem('notes', JSON.stringify(notes));
         loadNotes();
         
         socket.emit('newTask', { text: text });
     }
 
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const text = input.value.trim();
-        if (text) {
-            addNote(text);
-            input.value = '';
-        }
-    });
+    function addReminder(text, reminderTimestamp) {
+        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const newReminder = {
+            id: Date.now(),
+            text: text,
+            reminder: reminderTimestamp
+        };
+        notes.push(newReminder);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        loadNotes();
+        
+        socket.emit('newReminder', {
+            id: newReminder.id,
+            text: text,
+            reminderTime: reminderTimestamp
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (text) {
+                addNote(text);
+                input.value = '';
+            }
+        });
+    }
+
+    if (reminderForm) {
+        reminderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = reminderText.value.trim();
+            const reminderDateTime = reminderTime.value;
+            if (text && reminderDateTime) {
+                const timestamp = new Date(reminderDateTime).getTime();
+                if (timestamp > Date.now()) {
+                    addReminder(text, timestamp);
+                    reminderText.value = '';
+                    reminderTime.value = '';
+                } else {
+                    alert('Дата и время должны быть в будущем!');
+                }
+            }
+        });
+    }
 
     loadNotes();
 }
